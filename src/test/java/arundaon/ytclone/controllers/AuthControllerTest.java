@@ -5,7 +5,9 @@ import arundaon.ytclone.models.LoginUserRequest;
 import arundaon.ytclone.models.TokenResponse;
 import arundaon.ytclone.models.UserResponse;
 import arundaon.ytclone.models.WebResponse;
+import arundaon.ytclone.repositories.CommentRepository;
 import arundaon.ytclone.repositories.UserRepository;
+import arundaon.ytclone.repositories.VideoRepository;
 import arundaon.ytclone.security.BCrypt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureMockMvc
 class AuthControllerTest {
 
-    @Autowired
-    private UserRepository userRepository;
+
 
     @Autowired
     ObjectMapper objectMapper;
@@ -37,8 +38,17 @@ class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private VideoRepository videoRepository;
+    @Autowired
+    private CommentRepository commentRepository;
+
     @BeforeEach
     void setUp() {
+        commentRepository.deleteAll();
+        videoRepository.deleteAll();
         userRepository.deleteAll();
     }
 

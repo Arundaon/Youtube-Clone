@@ -111,15 +111,14 @@ public class VideoService {
 //            // TODO : Implement if null for optimization
 //        }
         Specification<Video> specification = (root, criteriaQuery, criteriaBuilder) -> {
-            List < Predicate> predicates = new ArrayList<>();
-            predicates.add(criteriaBuilder.equal(root.get("video"), value));
+            Predicate predicate = criteriaBuilder.conjunction();
             if (Objects.nonNull(value)) {
-                predicates.add(criteriaBuilder.or(
+                predicate = (criteriaBuilder.or(
                         criteriaBuilder.like(root.get("title"), "%" + value + "%"),
                         criteriaBuilder.like(root.get("description"), "%" + value + "%")
                 ));
             }
-            return criteriaQuery.where(predicates.toArray(new Predicate[]{})).getRestriction();
+            return predicate;
         };
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);

@@ -276,10 +276,10 @@ class VideoControllerTest {
                 .andDo(result->{
                     WebResponse<List<VideoInfo>> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
                     });
-                    assertEquals(response.getData().size(), 3);
-                    assertEquals(response.getPaging().getCurrent(), 0);
-                    assertEquals(response.getPaging().getSize(), 10);
-                    assertEquals(response.getPaging().getTotal(), 1);
+                    assertEquals(3,response.getData().size());
+                    assertEquals(0,response.getPaging().getCurrent());
+                    assertEquals(10,response.getPaging().getSize());
+                    assertEquals(1,response.getPaging().getTotal());
                 });
     }
 
@@ -292,7 +292,7 @@ class VideoControllerTest {
 
         mockMvc.perform(
                         get("/api/videos")
-                                .queryParam("value","video")
+                                .queryParam("value","title1")
                                 .queryParam("page","0")
                                 .queryParam("size","100")
                                 .accept(MediaType.APPLICATION_JSON)
@@ -304,10 +304,10 @@ class VideoControllerTest {
                     WebResponse<List<VideoInfo>> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
                     });
 
-                    assertEquals(response.getData().size(), 1);
-                    assertEquals(response.getPaging().getCurrent(), 0);
-                    assertEquals(response.getPaging().getSize(), 100);
-                    assertEquals(response.getPaging().getTotal(), 1);
+                    assertEquals(1, response.getData().size());
+                    assertEquals(0, response.getPaging().getCurrent() );
+                    assertEquals(100, response.getPaging().getSize());
+                    assertEquals(1, response.getPaging().getTotal());
 
                 });
     }

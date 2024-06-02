@@ -5,7 +5,9 @@ import arundaon.ytclone.models.RegisterUserRequest;
 import arundaon.ytclone.models.UpdateUserRequest;
 import arundaon.ytclone.models.UserResponse;
 import arundaon.ytclone.models.WebResponse;
+import arundaon.ytclone.repositories.CommentRepository;
 import arundaon.ytclone.repositories.UserRepository;
+import arundaon.ytclone.repositories.VideoRepository;
 import arundaon.ytclone.security.BCrypt;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,16 +31,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
     ObjectMapper objectMapper;
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private VideoRepository videoRepository;
+    @Autowired
+    private CommentRepository commentRepository;
+
     @BeforeEach
     void setUp() {
+        commentRepository.deleteAll();
+        videoRepository.deleteAll();
         userRepository.deleteAll();
     }
 
