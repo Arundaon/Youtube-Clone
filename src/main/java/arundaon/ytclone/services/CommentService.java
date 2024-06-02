@@ -7,15 +7,17 @@ import arundaon.ytclone.models.CreateCommentRequest;
 import arundaon.ytclone.repositories.CommentRepository;
 import arundaon.ytclone.repositories.VideoRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+@Service
 public class CommentService {
     private CommentRepository commentRepository;
     private ValidationService validationService;
     private VideoRepository videoRepository;
 
-    public CommentService(CommentRepository commentRepository, ValidationService validationService) {
+    public CommentService(CommentRepository commentRepository, ValidationService validationService, VideoRepository videoRepository) {
         this.commentRepository = commentRepository;
         this.validationService = validationService;
         this.videoRepository = videoRepository;

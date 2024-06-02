@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface CommentRepository extends JpaRepository<Comment,Integer> {
 
     List<Comment> findAllByVideo(Video video);
-
+    void deleteAllByVideo(Video video);
     Optional<Comment> findFirstByUserAndVideoAndId(User user, Video video, Long id);
+    Optional<Comment> findFirstByVideoId(String videoId);
 }

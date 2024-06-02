@@ -5,15 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-public class VideoComment {
-    private Long id;
-    private UserInfo user;
-    private LocalDateTime createdAt;
-    private String comment;
+public class UpdateVideoResponse {
+
+    private String id;
+    private String title;
+    private String description;
 }

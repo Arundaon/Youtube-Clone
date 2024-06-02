@@ -1,13 +1,13 @@
 package arundaon.ytclone.controllers;
 
 import arundaon.ytclone.entities.User;
-import arundaon.ytclone.models.UpdateVideoRequest;
-import arundaon.ytclone.models.UploadVideoRequest;
-import arundaon.ytclone.models.VideoResponse;
-import arundaon.ytclone.models.WebResponse;
+import arundaon.ytclone.models.*;
 import arundaon.ytclone.services.VideoService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class VideoController {
@@ -18,26 +18,52 @@ public class VideoController {
     }
 
     @PostMapping(path ="/api/videos",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    WebResponse<String> uploadVideo(User user, @RequestBody UploadVideoRequest request){
+    WebResponse<String> uploadVideo(User user, @ModelAttribute UploadVideoRequest request){
         videoService.upload(user,request);
         return WebResponse.<String>builder().data("OK").build();
     }
 
-    @PutMapping(path ="/api/videos/{videoId}",
+    @PatchMapping(path ="/api/videos/{videoId}",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    WebResponse<VideoResponse> updateVideo(User user, @PathVariable String videoId, @RequestBody UpdateVideoRequest request){
+    WebResponse<UpdateVideoResponse> updateVideo(User user, @PathVariable String videoId, @RequestBody UpdateVideoRequest request){
         request.setId(videoId);
-        VideoResponse updatedVideo = videoService.update(user, request);
-        return WebResponse.<VideoResponse>builder().data(updatedVideo).build();
+        UpdateVideoResponse updatedVideo = videoService.update(user, request);
+        return WebResponse.<UpdateVideoResponse>builder().data(updatedVideo).build();
     }
 
     @GetMapping(path="/api/videos/{videoId}",
             produces = MediaType.APPLICATION_JSON_VALUE)
     WebResponse<VideoResponse> getVideo(@PathVariable String videoId){
         return WebResponse.<VideoResponse>builder().data(videoService.getVideo(videoId)).build();
+    }
+
+    @GetMapping(path="/api/videos",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    WebResponse<List<VideoInfo>> searchVideo(
+            @RequestParam(required = false,defaultValue = "") String value,
+            @RequestParam(required = false,defaultValue = "0") Integer page,
+            @RequestParam(required = false,defaultValue = "10") Integer size
+    ){
+
+        Page<VideoInfo> results = videoService.search(value,page, size);
+        return WebResponse.<List<VideoInfo>>builder()
+                .data(results.getContent())
+                .paging(PagingResponse.builder()
+                        .current(results.getNumber())
+                        .total(results.getTotalPages())
+                        .size(results.getSize())
+                        .build())
+                .build();
+    }
+
+    @DeleteMapping(path="/api/videos/{videoId}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    WebResponse<String> removeVideo(User user, @PathVariable String videoId){
+        videoService.remove(user,videoId);
+        return WebResponse.<String>builder().data("OK").build();
     }
 }
 

@@ -12,6 +12,7 @@ import java.util.List;
 @Data
 @Builder
 public class VideoResponse {
+    private String id;
     private String title;
     private String description;
 
