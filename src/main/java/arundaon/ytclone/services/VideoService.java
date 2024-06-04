@@ -161,8 +161,7 @@ public class VideoService {
 
             String fileName = file.getOriginalFilename();
             String fileExtension = fileName.substring(fileName.lastIndexOf("."));
-            log.info(fileName);
-            log.info(fileExtension);
+
             if(!Set.of(".mp4",".flv",".mov", ".avi", ".3gpp", ".mpeg4", ".webm", ".mpegs", ".wmv")
                     .contains(fileExtension.toLowerCase())
             ) {
@@ -171,13 +170,18 @@ public class VideoService {
 
             String newFilename = System.currentTimeMillis() + fileExtension;
 
-            Path path = Paths.get(uploadDir + File.separator + newFilename);
+            Path path = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir, newFilename);
+            log.info(path.toString());
+            log.info(uploadDir);
             try{
                 Files.createDirectories(path.getParent());
                 file.transferTo(path.toFile());
                 return newFilename;
             }
             catch (Exception e){
+                log.info(e.toString());
+                log.info(e.getMessage());
+
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "There are some problem while uploading the file");
             }
 
