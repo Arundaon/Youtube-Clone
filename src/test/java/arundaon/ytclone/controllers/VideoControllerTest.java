@@ -21,6 +21,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 
@@ -63,7 +65,7 @@ class VideoControllerTest {
                 "video",
                 "videos/test_video.mp4",
                 "video/mp4",
-                "video content".getBytes()
+                Files.readAllBytes(new File("videos/test_video.mp4").toPath())
         );
         mockMvc.perform(
                         multipart("/api/videos")
@@ -92,7 +94,7 @@ class VideoControllerTest {
                 "video",
                 "video/test_video.mp4",
                 "video/mp4",
-                "video content".getBytes()
+                Files.readAllBytes(new File("videos/test_video.mp4").toPath())
         );
         mockMvc.perform(
                         multipart("/api/videos")

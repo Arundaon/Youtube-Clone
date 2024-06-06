@@ -7,6 +7,12 @@ import arundaon.ytclone.models.*;
 import arundaon.ytclone.repositories.CommentRepository;
 import arundaon.ytclone.repositories.VideoRepository;
 import jakarta.persistence.criteria.Predicate;
+import org.jcodec.api.FrameGrab;
+import org.jcodec.api.JCodecException;
+import org.jcodec.scale.AWTUtil;
+import org.jcodec.common.io.FileChannelWrapper;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.model.Picture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,6 +63,9 @@ public class VideoService {
         video.setTitle(request.getTitle());
         video.setUser(user);
         video.setVideo(filePath);
+
+        String thumbnailPath = createThumbnail(filePath,video.getId());
+        video.setThumbnail(thumbnailPath);
 
         videoRepository.save(video);
     }
@@ -174,19 +185,42 @@ public class VideoService {
             String newFilename = System.currentTimeMillis() + fileExtension;
 
             Path path = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir, newFilename);
-            log.info(path.toString());
-            log.info(uploadDir);
+
             try{
                 Files.createDirectories(path.getParent());
                 file.transferTo(path.toFile());
                 return newFilename;
             }
             catch (Exception e){
-                log.info(e.toString());
                 log.info(e.getMessage());
-
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "There are some problem while uploading the file");
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "There are some problem when uploading the file");
             }
+
+    }
+
+    public String createThumbnail(String videoName, String videoId) {
+        String thumbnailName = videoId+".png";
+        int frameNumber = 42;
+
+        try{
+            Path path = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir, thumbnailName);
+            Path videoPath = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir, videoName);
+
+            Picture picture = FrameGrab.getFrameFromFile(videoPath.toFile(), frameNumber);
+
+            BufferedImage bufferedImage = AWTUtil.toBufferedImage(picture);
+
+            Files.createDirectories(path.getParent());
+            ImageIO.write(bufferedImage, "png", path.toFile());
+
+            return thumbnailName;
+        }
+        catch(Exception e){
+            log.error("problem when creating thumbnail: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "There are some problem when uploading the file");
+        }
+
+
 
     }
 }
