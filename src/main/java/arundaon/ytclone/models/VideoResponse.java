@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -14,7 +15,9 @@ import java.util.List;
 public class VideoResponse {
     private String id;
     private String title;
+    private String video;
     private String description;
+    private LocalDateTime createdAt;
 
     private UserInfo uploader;
     private List<VideoComment> comments;

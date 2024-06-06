@@ -75,8 +75,11 @@ public class VideoService {
                     );
         }).toList();
 
-        return VideoResponse.builder().id(video.getId())
+        return VideoResponse.builder()
+                .id(video.getId())
+                .video(video.getVideo())
                 .title(video.getTitle())
+                .createdAt(video.getCreatedAt())
                 .description(video.getDescription()).uploader(uploader).comments(comments).build();
     }
 

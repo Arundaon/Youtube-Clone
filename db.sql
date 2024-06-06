@@ -1,3 +1,8 @@
+drop table video_likes;
+drop table comments;
+drop table videos;
+drop table users;
+
 create table users(
     username VARCHAR(16) NOT NULL,
     name    VARCHAR(16) NOT NULL,
@@ -13,10 +18,12 @@ create table users(
 CREATE TABLE videos(
     id VARCHAR(12)  NOT NULL,
     title VARCHAR(64) NOT NULL,
+    thumbnail VARCHAR(2048),
     video VARCHAR(2048) NOT NULL,
     username VARCHAR(16) NOT NULL,
     views BIGINT UNSIGNED NOT NULL DEFAULT 0,
     description TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY fk_users_videos (username) REFERENCES users (username)
 );
@@ -26,6 +33,7 @@ CREATE TABLE comments(
     video_id VARCHAR(12) NOT NULL,
     username VARCHAR(16) NOT NULL,
     comment TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
     PRIMARY KEY  (id),
     FOREIGN KEY fk_videos_comments (video_id) REFERENCES videos(id),
     FOREIGN KEY fk_users_comments (username) REFERENCES users(username)
@@ -39,16 +47,4 @@ CREATE TABLE video_likes(
     FOREIGN KEY fk_user_likes (username) REFERENCES users(username)
 );
 
-drop table video_likes;
-drop table comments;
-drop table videos;
-drop table users;
 
-
-alter table videos modify thumbnail VARCHAR(2048);
-
-alter table comments add created_at DATETIME DEFAULT CURRENT_TIMESTAMP;
-alter table videos add created_at DATETIME DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE videos MODIFY views BIGINT UNSIGNED NOT NULL DEFAULT 0;
-
-describe videos;

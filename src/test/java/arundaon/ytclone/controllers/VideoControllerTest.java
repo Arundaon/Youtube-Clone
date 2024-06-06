@@ -125,9 +125,11 @@ class VideoControllerTest {
                     });
                     assertNotNull(response.getData());
                     assertNotNull(response.getData().getId());
+                    assertNotNull(response.getData().getVideo());
                     assertNotNull(response.getData().getTitle());
                     assertNotNull(response.getData().getUploader());
                     assertNotNull(response.getData().getComments());
+                    assertNotNull(response.getData().getCreatedAt());
 
                 });
     }
