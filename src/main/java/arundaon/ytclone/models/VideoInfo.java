@@ -19,4 +19,5 @@ public class VideoInfo {
     private String thumbnail;
     private UserInfo uploader;
     private LocalDateTime createdAt;
+    private Long views;
 }

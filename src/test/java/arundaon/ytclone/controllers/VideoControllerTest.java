@@ -114,7 +114,7 @@ class VideoControllerTest {
 
 
     @Test
-    void getVideoSuccesful() throws Exception {
+    void getVideoSuccessful() throws Exception {
         createTestUsersAndVideos();
 
         mockMvc.perform(
@@ -132,6 +132,7 @@ class VideoControllerTest {
                     assertNotNull(response.getData().getUploader());
                     assertNotNull(response.getData().getComments());
                     assertNotNull(response.getData().getCreatedAt());
+                    assertNotNull(response.getData().getViews());
 
                 });
     }

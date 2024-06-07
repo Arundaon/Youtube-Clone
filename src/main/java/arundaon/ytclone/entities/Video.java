@@ -1,5 +1,6 @@
 package arundaon.ytclone.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +23,7 @@ public class Video {
     private String video;
     private String description;
     private String thumbnail;
+    private Long views= 0L;
 
     @Column(name="created_at")
     private LocalDateTime createdAt;

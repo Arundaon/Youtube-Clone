@@ -91,6 +91,7 @@ public class VideoService {
                 .video(video.getVideo())
                 .title(video.getTitle())
                 .createdAt(video.getCreatedAt())
+                .views(video.getViews())
                 .description(video.getDescription()).uploader(uploader).comments(comments).build();
     }
 
@@ -138,14 +139,15 @@ public class VideoService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Video> videos = videoRepository.findAll(specification, pageable);
         List<VideoInfo> videoInfos = videos.getContent().stream().map( video->{
-            return new VideoInfo(
-                    video.getId(),
-                    video.getTitle(),
-                    video.getDescription(),
-                    video.getThumbnail(),
-                    new UserInfo(video.getUser().getName(),video.getUser().getUsername(),video.getUser().getProfile()),
-                    video.getCreatedAt()
-            );
+            return VideoInfo.builder()
+                    .id(video.getId())
+                    .title(video.getTitle())
+                    .description(video.getDescription())
+                    .thumbnail(video.getThumbnail())
+                    .uploader(new UserInfo(video.getUser().getName(),video.getUser().getUsername(),video.getUser().getProfile()))
+                    .createdAt(video.getCreatedAt())
+                    .views(video.getViews())
+                    .build();
         }
         ).toList();
 
