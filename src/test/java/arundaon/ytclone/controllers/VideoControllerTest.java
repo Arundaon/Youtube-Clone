@@ -63,9 +63,9 @@ class VideoControllerTest {
         createATestUser();
         MockMultipartFile videoFile = new MockMultipartFile(
                 "video",
-                "videos/test_video.mp4",
+                "test_video.mp4",
                 "video/mp4",
-                Files.readAllBytes(new File("videos/test_video.mp4").toPath())
+                Files.readAllBytes(new File("contents/videos/test_video.mp4").toPath())
         );
         mockMvc.perform(
                         multipart("/api/videos")
@@ -92,9 +92,9 @@ class VideoControllerTest {
         createATestUser();
         MockMultipartFile videoFile = new MockMultipartFile(
                 "video",
-                "video/test_video.mp4",
+                "test_video.mp4",
                 "video/mp4",
-                Files.readAllBytes(new File("videos/test_video.mp4").toPath())
+                Files.readAllBytes(new File("contents/videos/test_video.mp4").toPath())
         );
         mockMvc.perform(
                         multipart("/api/videos")
@@ -411,6 +411,114 @@ class VideoControllerTest {
                     assertNotNull(response.getErrors());
                     Video video = videoRepository.findById("video2").orElse(null);
                     assertNotNull(video);
+
+                });
+    }
+
+    @Test
+    void incrementViewVideo() throws Exception {
+        createTestUsersAndVideos();
+
+        mockMvc.perform(
+                        patch("/api/videos/video1/views")
+                                .accept(MediaType.APPLICATION_JSON)
+                )
+                .andExpectAll(status().isOk())
+                .andDo(result->{
+                    WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+                    });
+                    assertEquals("OK",response.getData());
+
+                    Video video = videoRepository.findById("video1").orElse(null);
+                    assertEquals(1, video.getViews());
+
+                });
+    }
+
+    @Test
+    void likeVideoSuccessful() throws Exception {
+        createTestUsersAndVideos();
+
+        LikeRequest request = LikeRequest.builder().like(true).build();
+
+        mockMvc.perform(
+                        post("/api/videos/video1/like")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-API-TOKEN","mytoken1")
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpectAll(status().isOk())
+                .andDo(result->{
+                    WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+                    });
+                    assertEquals("OK",response.getData());
+
+                    assertEquals(1, videoRepository.countLikesByVideoId("video1"));
+
+                });
+    }
+
+    @Test
+    void likeVideoUnauthorized() throws Exception {
+        createTestUsersAndVideos();
+
+        LikeRequest request = LikeRequest.builder().like(true).build();
+
+        mockMvc.perform(
+                        post("/api/videos/video1/like")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-API-TOKEN","mytoken1wrong")
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpectAll(status().isUnauthorized())
+                .andDo(result->{
+                    WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+                    });
+                    assertNotNull(response.getErrors());
+
+                    assertEquals(0, videoRepository.countLikesByVideoId("video1"));
+
+                });
+    }
+
+    @Test
+    void getLikeSuccessful() throws Exception {
+        createTestUsersAndVideos();
+
+        LikeRequest request = LikeRequest.builder().like(true).build();
+
+        mockMvc.perform(
+                        get("/api/videos/video1/like")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .header("X-API-TOKEN","mytoken1")
+                )
+                .andExpectAll(status().isOk())
+                .andDo(result->{
+                    WebResponse<LikeResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+                    });
+                    assertFalse(response.getData().isLiked());
+
+                    assertEquals(0, response.getData().getLikes());
+
+                });
+    }
+
+    @Test
+    void getLikeUnauthorized() throws Exception {
+        createTestUsersAndVideos();
+
+        mockMvc.perform(
+                        get("/api/videos/video1/like")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .header("X-API-TOKEN","mytoken1wrong")
+                )
+                .andExpectAll(status().isUnauthorized())
+                .andDo(result->{
+                    WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+                    });
+                    assertNotNull(response.getErrors());
 
                 });
     }

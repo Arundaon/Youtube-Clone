@@ -1,6 +1,5 @@
 package arundaon.ytclone.services;
 
-import arundaon.ytclone.entities.Comment;
 import arundaon.ytclone.entities.User;
 import arundaon.ytclone.entities.Video;
 import arundaon.ytclone.models.*;
@@ -8,10 +7,7 @@ import arundaon.ytclone.repositories.CommentRepository;
 import arundaon.ytclone.repositories.VideoRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.jcodec.api.FrameGrab;
-import org.jcodec.api.JCodecException;
 import org.jcodec.scale.AWTUtil;
-import org.jcodec.common.io.FileChannelWrapper;
-import org.jcodec.common.io.NIOUtils;
 import org.jcodec.common.model.Picture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,7 +50,7 @@ public class VideoService {
     public void upload(User user, UploadVideoRequest request){
         validationService.validate(request);
 
-        String filePath = saveFile(request.getVideo());
+        String filePath = saveVideo(request.getVideo());
 
         Video video = new Video();
         video.setId(generateId());
@@ -80,18 +75,20 @@ public class VideoService {
         List<VideoComment> comments = video.getComments().stream().map(comment ->{
             return new VideoComment(
                     comment.getId(),
-                    new UserInfo(video.getUser().getName(),video.getUser().getUsername(),video.getUser().getProfile()),
+                    new UserInfo(comment.getUser().getName(),comment.getUser().getUsername(),comment.getUser().getProfile()),
                     comment.getCreatedAt(),
                     comment.getComment()
                     );
         }).toList();
 
+        Long likes = videoRepository.countLikesByVideoId(video.getId());
         return VideoResponse.builder()
                 .id(video.getId())
                 .video(video.getVideo())
                 .title(video.getTitle())
                 .createdAt(video.getCreatedAt())
                 .views(video.getViews())
+                .likes(likes)
                 .description(video.getDescription()).uploader(uploader).comments(comments).build();
     }
 
@@ -122,9 +119,6 @@ public class VideoService {
 
     @Transactional(readOnly = true)
     public Page<VideoInfo> search(String value, Integer pageNumber, Integer pageSize){
-//        if(value == null || value.isEmpty()){
-//            // TODO : Implement if null for optimization
-//        }
         Specification<Video> specification = (root, criteriaQuery, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
             if (Objects.nonNull(value)) {
@@ -154,6 +148,57 @@ public class VideoService {
         return new PageImpl<>(videoInfos,pageable,videos.getTotalElements());
     }
 
+    @Transactional
+    public void incrementViews(String id){
+        Video video = videoRepository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Video not found"));
+        video.setViews(video.getViews()+1);
+        videoRepository.save(video);
+    }
+
+    @Transactional
+    public void likeVideo(User user, String id){
+        Video video = videoRepository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Video not found"));
+
+        log.info("--------GETLIKES------");
+        video.getLikes().add(user);
+        videoRepository.save(video);
+        log.info("--------GETLIKES------");
+    }
+
+    @Transactional
+    public void unlikeVideo(User user, String id){
+        Video video = videoRepository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Video not found"));
+
+        log.info("--------UNLIKES------");
+        video.getLikes().remove(user);
+        videoRepository.save(video);
+        log.info("--------UNLIKES------");
+    }
+
+    @Transactional(readOnly = true)
+    public LikeResponse userLiked(User user, String id){
+        Video video = videoRepository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Video not found"));
+        Boolean liked = videoRepository.hasUserLikedVideo(id, user.getUsername());
+        Long likes = videoRepository.countLikesByVideoId(id);
+        return LikeResponse.builder()
+                .liked(liked)
+                .likes(likes)
+                .build();
+    }
+
+
+
+
+
+
+
+
+
+
 
     private String generateId() {
         UUID originalUUID = UUID.randomUUID();
@@ -173,7 +218,7 @@ public class VideoService {
         return buffer;
     }
 
-    private String saveFile(MultipartFile file){
+    private String saveVideo(MultipartFile file){
 
             String fileName = file.getOriginalFilename();
             String fileExtension = fileName.substring(fileName.lastIndexOf("."));
@@ -186,12 +231,12 @@ public class VideoService {
 
             String newFilename = System.currentTimeMillis() + fileExtension;
 
-            Path path = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir, newFilename);
+            Path path = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir+"/videos/", newFilename);
 
             try{
                 Files.createDirectories(path.getParent());
                 file.transferTo(path.toFile());
-                return newFilename;
+                return "videos/"+newFilename;
             }
             catch (Exception e){
                 log.info(e.getMessage());
@@ -202,10 +247,10 @@ public class VideoService {
 
     public String createThumbnail(String videoName, String videoId) {
         String thumbnailName = videoId+".png";
-        int frameNumber = 42;
+        int frameNumber = 10;
 
         try{
-            Path path = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir, thumbnailName);
+            Path path = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir+"/thumbnails/", thumbnailName);
             Path videoPath = Paths.get(Paths.get("").toAbsolutePath().toString(),uploadDir, videoName);
 
             Picture picture = FrameGrab.getFrameFromFile(videoPath.toFile(), frameNumber);
@@ -215,7 +260,7 @@ public class VideoService {
             Files.createDirectories(path.getParent());
             ImageIO.write(bufferedImage, "png", path.toFile());
 
-            return thumbnailName;
+            return "thumbnails/" + thumbnailName;
         }
         catch(Exception e){
             log.error("problem when creating thumbnail: " + e.getMessage());

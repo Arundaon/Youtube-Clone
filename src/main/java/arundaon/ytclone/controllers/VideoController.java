@@ -3,14 +3,20 @@ package arundaon.ytclone.controllers;
 import arundaon.ytclone.entities.User;
 import arundaon.ytclone.models.*;
 import arundaon.ytclone.services.VideoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 public class VideoController {
+    private static final Logger log = LoggerFactory.getLogger(VideoService.class);
     VideoService videoService;
 
     public VideoController(VideoService videoService) {
@@ -64,6 +70,36 @@ public class VideoController {
     WebResponse<String> removeVideo(User user, @PathVariable String videoId){
         videoService.remove(user,videoId);
         return WebResponse.<String>builder().data("OK").build();
+    }
+
+    @PatchMapping(path = "/api/videos/{videoId}/views",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    WebResponse<String> viewVideo(@PathVariable String videoId){
+        videoService.incrementViews(videoId);
+        return WebResponse.<String>builder().data("OK").build();
+    }
+
+    @PostMapping(path = "/api/videos/{videoId}/like",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    WebResponse<String> likeVideo(User user, @PathVariable String videoId, @RequestBody LikeRequest request){
+
+        if (request.isLike()){
+          videoService.likeVideo(user, videoId);
+        }
+
+        else{
+            videoService.unlikeVideo(user, videoId);
+        }
+
+        return WebResponse.<String>builder().data("OK").build();
+    }
+
+    @GetMapping(path = "/api/videos/{videoId}/like",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    WebResponse<LikeResponse> getLike(User user, @PathVariable String videoId){
+
+        return WebResponse.<LikeResponse>builder().data(videoService.userLiked(user,videoId)).build();
     }
 }
 

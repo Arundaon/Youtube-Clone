@@ -19,6 +19,7 @@ public class VideoResponse {
     private String description;
     private LocalDateTime createdAt;
     private Long views;
+    private Long likes;
 
     private UserInfo uploader;
     private List<VideoComment> comments;

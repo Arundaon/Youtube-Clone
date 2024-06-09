@@ -37,8 +37,8 @@ public class Video {
     @ManyToMany
     @JoinTable(
             name = "video_likes",
-            joinColumns = @JoinColumn(name = "username"),
-            inverseJoinColumns = @JoinColumn(name = "video_id"))
+            joinColumns = @JoinColumn(name = "video_id"),
+            inverseJoinColumns = @JoinColumn(name = "username"))
     private Set<User> likes;
 
     @OneToMany(mappedBy = "video")
