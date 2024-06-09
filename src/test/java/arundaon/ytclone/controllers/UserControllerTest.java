@@ -9,15 +9,25 @@ import arundaon.ytclone.repositories.CommentRepository;
 import arundaon.ytclone.repositories.UserRepository;
 import arundaon.ytclone.repositories.VideoRepository;
 import arundaon.ytclone.security.BCrypt;
+import arundaon.ytclone.services.VideoService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.MockMvcBuilder.*;
@@ -29,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class UserControllerTest {
+    private static final Logger log = LoggerFactory.getLogger(VideoService.class);
 
     @Autowired
     ObjectMapper objectMapper;
@@ -52,6 +63,7 @@ class UserControllerTest {
 
     @Test
     void testRegisterSuccess() throws Exception {
+
         RegisterUserRequest request = RegisterUserRequest.builder().username("ary").name("arundaon").password("password").build();
 
         mockMvc.perform(
@@ -132,6 +144,7 @@ class UserControllerTest {
         user.setPassword(BCrypt.hashpw("password",BCrypt.gensalt()));
         user.setUsername("test");
         user.setProfile("profile");
+        user.setBio("mybio");
         user.setToken("mytoken");
         user.setExpiredAt(System.currentTimeMillis() + 100000L);
 
@@ -149,6 +162,7 @@ class UserControllerTest {
             assertEquals("test",response.getData().getUsername());
             assertEquals("test",response.getData().getName());
             assertEquals("profile",response.getData().getProfile());
+            assertEquals("mybio",response.getData().getBio());
         });
     }
 
@@ -183,22 +197,30 @@ class UserControllerTest {
         user.setName("test");
         user.setPassword(BCrypt.hashpw("password",BCrypt.gensalt()));
         user.setUsername("test");
-        user.setProfile("profile");
         user.setToken("mytoken");
         user.setExpiredAt(System.currentTimeMillis() + 100000L);
-
-        UpdateUserRequest r = UpdateUserRequest.builder().name("newTest").password("newPass123").bio("hello there!").build();
-
-        String request = objectMapper.writeValueAsString(r);
-
         userRepository.save(user);
 
-        mockMvc.perform(patch("/api/users/current")
-                .accept(MediaType.APPLICATION_JSON)
-                .header("X-API-TOKEN", "mytoken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(request)
-        ).andExpectAll(
+        MockMultipartFile profile = new MockMultipartFile(
+                "image",
+                "test_image.png",
+                "image/png",
+                Files.readAllBytes(new File("contents/profiles/test_image.png").toPath())
+//                "test image".getBytes()
+//                Files.readAllBytes(Paths.get(Paths.get("").toAbsolutePath().toString(),"contents/profiles/", "test_image.png"))
+                );
+
+
+        mockMvc.perform(multipart("/api/users/current")
+                    .file(profile)
+                    .param("name","newTest")
+                    .param("password","newPass123")
+                    .param("bio","hello there!")
+                    .header("X-API-TOKEN", "mytoken")
+                        .contentType("multipart/form-data")
+
+        )
+                .andExpectAll(
                 status().isOk()
         ).andDo(result->{
             WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
@@ -209,24 +231,19 @@ class UserControllerTest {
             assertEquals("test",updated.getUsername());
             assertEquals("newTest",updated.getName());
             assertTrue(BCrypt.checkpw("newPass123",updated.getPassword()));
-            assertEquals(r.getBio(), updated.getBio());
-
-
+            assertEquals("hello there!", updated.getBio());
         });
     }
 
     @Test
     void updateUserFailed() throws Exception{
 
-        UpdateUserRequest r = UpdateUserRequest.builder().name("newTest").password("newPass123").bio("hello there!").build();
-
-        String request = objectMapper.writeValueAsString(r);
-
-        mockMvc.perform(patch("/api/users/current")
+        mockMvc.perform(multipart("/api/users/current")
                 .accept(MediaType.APPLICATION_JSON)
                 .header("X-API-TOKEN", "mytoken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(request)
+                .param("name","newTest")
+                .param("password","newPass123")
+                .param("bio","hello there!")
         ).andExpectAll(
                 status().isUnauthorized()
         ).andDo(result->{

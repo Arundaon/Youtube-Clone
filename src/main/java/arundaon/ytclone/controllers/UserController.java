@@ -30,8 +30,8 @@ public class UserController {
         return WebResponse.<UserResponse>builder().data(userService.getCurrentUser(user)).build();
     }
 
-    @PatchMapping(path = "/api/users/current", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    WebResponse<String> updateCurrentUser(User user, @RequestBody UpdateUserRequest request){
+    @PostMapping(path = "/api/users/current", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    WebResponse<String> updateCurrentUser(User user, @ModelAttribute UpdateUserRequest request){
         userService.updateUser(user, request);
         return WebResponse.<String>builder().data("OK").build();
     }
